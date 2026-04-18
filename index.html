@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campus Sports Scheduler</title>
+  <meta name="description" content="Schedule and vote on campus sports games near Hagen." />
+  <meta name="theme-color" content="#080a10" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-badge">⚡</div>
+        <span class="logo-text">FH Campus<em>Sports</em></span>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary" id="btn-open-modal">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+          New Game
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div id="toast-container"></div>
+
+  <main class="container">
+
+    <section class="page-hero">
+      <h1 class="page-hero-title">Play.<br><span>Vote.</span> Show up.</h1>
+      <p class="page-hero-sub">Schedule campus games, vote for the best time, and get on the pitch.</p>
+      <div class="stats-bar">
+        <div class="stat-item">
+          <span class="stat-number" id="stat-games">—</span>
+          <span class="stat-label">Active Games</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="stat-votes">—</span>
+          <span class="stat-label">Total Votes</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="stat-sports">2</span>
+          <span class="stat-label">Sports</span>
+        </div>
+      </div>
+    </section>
+
+    <div id="reset-banner" class="reset-banner hidden">
+      🔄 New week — all votes have been reset. Fresh start!
+    </div>
+
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" type="search" id="search-input" placeholder="Search games or locations…" autocomplete="off" />
+      </div>
+      <div class="filter-chips">
+        <button class="chip active" data-filter="all">All</button>
+        <button class="chip" data-filter="football">⚽</button>
+        <button class="chip" data-filter="basketball">🏀</button>
+      </div>
+    </div>
+
+    <section class="games-section">
+      <div class="section-header">
+        <span class="section-title">Upcoming Games</span>
+        <span class="games-count" id="games-count">—</span>
+      </div>
+      <div id="games-list" class="games-list">
+        <div class="skeleton-card"><div class="skeleton-line w-40"></div><div class="skeleton-line w-65"></div><div class="skeleton-line w-80"></div><div class="skeleton-line w-50"></div></div>
+        <div class="skeleton-card" style="animation-delay:0.2s"><div class="skeleton-line w-40"></div><div class="skeleton-line w-65"></div><div class="skeleton-line w-80"></div></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- CREATE MODAL -->
+  <div id="modal-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <span class="modal-eyebrow">New Game</span>
+          <h2 id="modal-title">Schedule a Game</h2>
+        </div>
+        <button class="modal-close" id="btn-close-modal" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Sport</label>
+          <div class="sport-selector">
+            <button class="sport-btn active" data-sport="football">⚽ Football</button>
+            <button class="sport-btn" data-sport="basketball">🏀 Basketball</button>
+          </div>
+          <input type="hidden" id="selected-sport" value="football" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location <span class="hint">(tap a marker on the map)</span></label>
+          <div id="location-display" class="location-display">No location selected</div>
+          <div id="create-map" class="create-map"></div>
+          <input type="hidden" id="selected-location-name" />
+          <input type="hidden" id="selected-location-lat" />
+          <input type="hidden" id="selected-location-lng" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Proposed Times <span class="hint">(2–3 options)</span></label>
+          <div id="time-inputs">
+            <input class="input time-input" type="datetime-local" />
+            <input class="input time-input" type="datetime-local" />
+            <input class="input time-input" type="datetime-local" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Game expires on</label>
+          <input class="input" type="date" id="expires-at" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="btn-cancel-modal">Cancel</button>
+        <button class="btn btn-primary" id="btn-submit-game">Create Game</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL MODAL -->
+  <div id="detail-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <span class="modal-eyebrow">Game Details</span>
+          <h2 id="detail-title">—</h2>
+        </div>
+        <button class="modal-close" id="btn-close-detail" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body" id="detail-body"></div>
+    </div>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
